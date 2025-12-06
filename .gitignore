@@ -1,0 +1,9 @@
+lazy-lock.json
+plugin/
+.luarc.json
+.stylua.toml
+spell/
+undo/
+*.log
+.DS_Store
+Thumbs.db
