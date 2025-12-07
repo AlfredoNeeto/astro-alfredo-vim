@@ -1,5 +1,3 @@
-if true then return {} end -- WARN: REMOVE THIS LINE TO ACTIVATE THIS FILE
-
 -- AstroCore provides a central place to modify mappings, vim options, autocommands, and more!
 -- Configuration documentation can be found with `:h astrocore`
 -- NOTE: We highly recommend setting up the Lua Language Server (`:LspInstall lua_ls`)
@@ -24,17 +22,48 @@ return {
       virtual_text = true,
       underline = true,
     },
-    -- passed to `vim.filetype.add`
-    filetypes = {
-      -- see `:h vim.filetype.add` for usage
-      extension = {
-        foo = "fooscript",
+    -- Autocmds para ajustar formatação por tipo de arquivo
+    autocmds = {
+      csharp_settings = {
+        {
+          event = "FileType",
+          pattern = "cs",
+          desc = "Configurações específicas para C#",
+          callback = function()
+            vim.opt_local.tabstop = 4
+            vim.opt_local.shiftwidth = 4
+            vim.opt_local.softtabstop = 4
+            vim.opt_local.expandtab = true
+            vim.opt_local.textwidth = 0
+            vim.opt_local.formatoptions = "jcroql"
+          end,
+        },
       },
-      filename = {
-        [".foorc"] = "fooscript",
+      javascript_typescript_settings = {
+        {
+          event = "FileType",
+          pattern = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
+          desc = "Configurações para JS/TS",
+          callback = function()
+            vim.opt_local.tabstop = 2
+            vim.opt_local.shiftwidth = 2
+            vim.opt_local.softtabstop = 2
+            vim.opt_local.expandtab = true
+          end,
+        },
       },
-      pattern = {
-        [".*/etc/foo/.*"] = "fooscript",
+      dart_settings = {
+        {
+          event = "FileType",
+          pattern = "dart",
+          desc = "Configurações para Dart/Flutter",
+          callback = function()
+            vim.opt_local.tabstop = 2
+            vim.opt_local.shiftwidth = 2
+            vim.opt_local.softtabstop = 2
+            vim.opt_local.expandtab = true
+          end,
+        },
       },
     },
     -- vim options can be configured here
@@ -45,6 +74,23 @@ return {
         spell = false, -- sets vim.opt.spell
         signcolumn = "yes", -- sets vim.opt.signcolumn to yes
         wrap = false, -- sets vim.opt.wrap
+        cursorline = true, -- destaca a linha atual
+        termguicolors = true, -- cores verdadeiras
+        scrolloff = 8, -- linhas de contexto ao rolar
+        sidescrolloff = 8, -- colunas de contexto ao rolar
+        mouse = "a", -- habilita mouse em todos os modos
+        clipboard = "unnamedplus", -- usa clipboard do sistema
+        splitbelow = true, -- split horizontal para baixo
+        splitright = true, -- split vertical para direita
+        conceallevel = 0, -- mostra todos os caracteres
+        pumheight = 15, -- altura do popup de completação
+        -- Configurações de indentação e formatação
+        tabstop = 4, -- tamanho do tab visual
+        shiftwidth = 4, -- tamanho da indentação
+        softtabstop = 4, -- tamanho do tab ao editar
+        expandtab = true, -- usa espaços ao invés de tabs
+        smartindent = true, -- indentação inteligente
+        autoindent = true, -- mantém indentação da linha anterior
       },
       g = { -- vim.g.<key>
         -- configure global vim variables (vim.g)

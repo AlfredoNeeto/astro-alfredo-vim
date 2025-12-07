@@ -35,13 +35,45 @@ return {
     },
     opts = {
       close_if_last_window = true,
-      window = { width = 30 },
+      popup_border_style = "rounded",
+      window = { 
+        width = 32,
+        mappings = {
+          ["<space>"] = "none",
+        },
+      },
+      default_component_configs = {
+        indent = {
+          with_expanders = true,
+          expander_collapsed = "",
+          expander_expanded = "",
+        },
+        icon = {
+          folder_closed = "",
+          folder_open = "",
+          folder_empty = "",
+        },
+        git_status = {
+          symbols = {
+            added = "✓",
+            modified = "●",
+            deleted = "✗",
+            renamed = "➤",
+            untracked = "★",
+            ignored = "○",
+            unstaged = "○",
+            staged = "●",
+            conflict = "⚠",
+          },
+        },
+      },
       filesystem = {
         follow_current_file = { enabled = true },
         filtered_items = {
           hide_dotfiles = false,
           hide_gitignored = false,
         },
+        use_libuv_file_watcher = true,
       },
       default_source = "filesystem",
       sources = { "filesystem", "git_status", "buffers" },
@@ -87,6 +119,32 @@ return {
       { "<C-f>", "<cmd>Telescope live_grep<cr>", desc = "Find in files" },
       { "<C-h>", "<cmd>Telescope oldfiles<cr>", desc = "Recent files" },
     },
+    opts = function(_, opts)
+      local actions = require "telescope.actions"
+      return require("astrocore").extend_tbl(opts, {
+        defaults = {
+          prompt_prefix = "🔍 ",
+          selection_caret = "▶ ",
+          path_display = { "smart" },
+          sorting_strategy = "ascending",
+          layout_config = {
+            horizontal = {
+              prompt_position = "top",
+              preview_width = 0.55,
+            },
+            width = 0.87,
+            height = 0.80,
+            preview_cutoff = 120,
+          },
+          mappings = {
+            i = {
+              ["<C-j>"] = actions.move_selection_next,
+              ["<C-k>"] = actions.move_selection_previous,
+            },
+          },
+        },
+      })
+    end,
   },
 
   -- Comentar código facilmente
@@ -107,11 +165,96 @@ return {
     opts = {},
   },
 
-  -- C# / .NET Support
+  -- C# / .NET Support com Roslyn
   {
-    "Hoffs/omnisharp-extended-lsp.nvim",
+    "seblj/roslyn.nvim",
     ft = "cs",
+    opts = {
+      config = {
+        settings = {
+          ["csharp|formatting"] = {
+            organize_imports = true,
+          },
+          ["csharp|code_lens"] = {
+            dotnet_enable_references_code_lens = true,
+          },
+        },
+      },
+    },
   },
+
+  -- Formatadores para diversos tipos de arquivo
+  {
+    "stevearc/conform.nvim",
+    event = "BufReadPre",
+    opts = {
+      formatters_by_ft = {
+        json = { "prettier" },
+        jsonc = { "prettier" },
+        yaml = { "prettier" },
+        markdown = { "prettier" },
+        html = { "prettier" },
+        css = { "prettier" },
+        scss = { "prettier" },
+        javascript = { "prettier" },
+        typescript = { "prettier" },
+        javascriptreact = { "prettier" },
+        typescriptreact = { "prettier" },
+        vue = { "prettier" },
+        xml = { "xmlformat" },
+        -- XAML usa o mesmo formatador que XML
+        xaml = { "xmlformat" },
+      },
+      format_on_save = function(bufnr)
+        -- Formatar automaticamente ao salvar
+        return {
+          timeout_ms = 3000,
+          lsp_fallback = true,
+        }
+      end,
+    },
+  },
+
+  -- Desabilitar conform.nvim temporariamente
+  --[[ 
+  -- Formatador melhor para C# e outras linguagens
+  {
+    "stevearc/conform.nvim",
+    event = "BufWritePre",
+    dependencies = { "williamboman/mason.nvim" },
+    opts = {
+      formatters_by_ft = {
+        cs = { "csharpier" },
+        javascript = { "prettier" },
+        typescript = { "prettier" },
+        javascriptreact = { "prettier" },
+        typescriptreact = { "prettier" },
+        json = { "prettier" },
+        yaml = { "prettier" },
+        markdown = { "prettier" },
+        lua = { "stylua" },
+        python = { "black" },
+        dart = { "dart_format" },
+      },
+      format_on_save = function(bufnr)
+        -- Desabilitar auto-format, usar manual
+        return nil
+      end,
+      formatters = {
+        csharpier = {
+          command = "dotnet",
+          args = function(self, ctx)
+            return {
+              "csharpier",
+              "--write-stdout",
+            }
+          end,
+          stdin = true,
+        },
+      },
+    },
+  },
+  ]]--
 
   -- Terminal flutuante
   {
@@ -196,102 +339,88 @@ return {
       },
       show_help = false,
       show_system_prompt = false,
-      -- Modo agente - permite que o Copilot execute ações autonomamente
-      agent = 'o200-1217',  -- Modelo com capacidades de agente
+      -- Prompt padrão para todas as conversas
+      system_prompt = [[
+Você é um assistente de programação ajudando um desenvolvedor brasileiro.
+Regras importantes:
+- Sempre responda em português do Brasil.
+- Seja objetivo e direto, sem texto desnecessário.
+- Sempre que fizer sentido, mostre exemplos de código.
+- Nunca traduza código, nomes de classes, métodos, variáveis ou APIs.
+- Explique em português, mas deixe o código exatamente como estaria em um projeto real em inglês.
+- Quando listar passos, seja curto (no máximo 3–5 itens).
+- Se a pergunta estiver confusa, peça esclarecimento de forma simples.
+]],
     },
-    keys = {
-      { "<leader>cc", "<cmd>CopilotChatToggle<cr>", desc = "Toggle Copilot Chat" },
-      { "<leader>ce", "<cmd>CopilotChatExplain<cr>", desc = "Explain code" },
-      { "<leader>ct", "<cmd>CopilotChatTests<cr>", desc = "Generate tests" },
-      { "<leader>cf", "<cmd>CopilotChatFix<cr>", desc = "Fix code" },
-      { "<leader>co", "<cmd>CopilotChatOptimize<cr>", desc = "Optimize code" },
-      { "<leader>cm", "<cmd>CopilotChatModels<cr>", desc = "Select Copilot Model" },
-      { "<leader>ca", "<cmd>CopilotChatAgents<cr>", desc = "Select Copilot Agent" },
-      { "<leader>cr", "<cmd>CopilotChatReset<cr>", desc = "Reset Chat" },
-      { "<leader>cs", "<cmd>CopilotChatStop<cr>", desc = "Stop Chat" },
-    },
-  },
-
-  -- == Examples of Overriding Plugins ==
-
-  -- customize dashboard options
-  {
-    "folke/snacks.nvim",
-    opts = {
-      dashboard = {
-        preset = {
-          header = table.concat({
-            " █████  ███████ ████████ ██████   ██████ ",
-            "██   ██ ██         ██    ██   ██ ██    ██",
-            "███████ ███████    ██    ██████  ██    ██",
-            "██   ██      ██    ██    ██   ██ ██    ██",
-            "██   ██ ███████    ██    ██   ██  ██████ ",
-            "",
-            "███    ██ ██    ██ ██ ███    ███",
-            "████   ██ ██    ██ ██ ████  ████",
-            "██ ██  ██ ██    ██ ██ ██ ████ ██",
-            "██  ██ ██  ██  ██  ██ ██  ██  ██",
-            "██   ████   ████   ██ ██      ██",
-          }, "\n"),
-        },
-      },
-    },
-  },
-
-  -- You can disable default plugins as follows:
-  { "max397574/better-escape.nvim", enabled = false },
-
-  -- You can also easily customize additional setup of plugins that is outside of the plugin's setup call
-  {
-    "L3MON4D3/LuaSnip",
-    config = function(plugin, opts)
-      require "astronvim.plugins.configs.luasnip"(plugin, opts) -- include the default astronvim config that calls the setup call
-      -- add more custom luasnip configuration such as filetype extend or custom snippets
-      local luasnip = require "luasnip"
-      luasnip.filetype_extend("javascript", { "javascriptreact" })
+    keys = function(_, keys)
+      -- mantém qualquer mapeamento padrão do plugin
+      local mappings = {
+        { "<leader>cc", "<cmd>CopilotChatToggle<cr>", desc = "Toggle Copilot Chat" },
+        -- Explicar código (usa seleção visual se existir)
+        { "<leader>ce", "<cmd>CopilotChatExplain<cr>", mode = { "n", "v" }, desc = "Explain code / selection" },
+        { "<leader>ct", "<cmd>CopilotChatTests<cr>", mode = { "n", "v" }, desc = "Generate tests" },
+        { "<leader>cf", "<cmd>CopilotChatFix<cr>", mode = { "n", "v" }, desc = "Fix code" },
+        { "<leader>co", "<cmd>CopilotChatOptimize<cr>", mode = { "n", "v" }, desc = "Optimize code" },
+        { "<leader>cm", "<cmd>CopilotChatModels<cr>", desc = "Select Copilot Model" },
+        { "<leader>cr", "<cmd>CopilotChatReset<cr>", desc = "Reset Chat" },
+        { "<leader>cs", "<cmd>CopilotChatStop<cr>", desc = "Stop Chat" },
+      }
+      return vim.list_extend(keys or {}, mappings)
     end,
   },
 
-  {
-    "windwp/nvim-autopairs",
-    config = function(plugin, opts)
-      require "astronvim.plugins.configs.nvim-autopairs"(plugin, opts) -- include the default astronvim config that calls the setup call
-      -- add more custom autopairs configuration such as custom rules
-      local npairs = require "nvim-autopairs"
-      local Rule = require "nvim-autopairs.rule"
-      local cond = require "nvim-autopairs.conds"
-      npairs.add_rules(
-        {
-          Rule("$", "$", { "tex", "latex" })
-            -- don't add a pair if the next character is %
-            :with_pair(cond.not_after_regex "%%")
-            -- don't add a pair if  the previous character is xxx
-            :with_pair(
-              cond.not_before_regex("xxx", 3)
-            )
-            -- don't move right when repeat character
-            :with_move(cond.none())
-            -- don't delete if the next character is xx
-            :with_del(cond.not_after_regex "xx")
-            -- disable adding a newline when you press <cr>
-            :with_cr(cond.none()),
-        },
-        -- disable for .vim files, but it work for another filetypes
-        Rule("a", "a", "-vim")
-      )
-    end,
-  },
-
-  -- Quick save with Ctrl+s e outros atalhos básicos
+  -- Quick save com Ctrl+s e formatação inteligente
   {
     "AstroNvim/astrocore",
     opts = {
       mappings = {
         n = {
           ["<C-s>"] = { "<cmd>w<cr>", desc = "Save file" },
+          ["<leader>l"] = {
+            function()
+              local ft = vim.bo.filetype
+              local conform_fts = { "json", "jsonc", "yaml", "markdown", "html", "css", "scss", 
+                                    "javascript", "typescript", "javascriptreact", "typescriptreact", 
+                                    "vue", "xml", "xaml" }
+              
+              -- Verificar se é um tipo de arquivo que o conform suporta
+              local use_conform = false
+              for _, conform_ft in ipairs(conform_fts) do
+                if ft == conform_ft then
+                  use_conform = true
+                  break
+                end
+              end
+
+              if use_conform then
+                require("conform").format({
+                  async = false,
+                  timeout_ms = 3000,
+                  lsp_fallback = true,
+                })
+              else
+                vim.lsp.buf.format({
+                  async = false,
+                  timeout_ms = 5000,
+                })
+              end
+            end,
+            desc = "Format file"
+          },
         },
         i = {
           ["<C-s>"] = { "<esc><cmd>w<cr>", desc = "Save and exit insert" },
+        },
+        v = {
+          ["<leader>l"] = {
+            function()
+              vim.lsp.buf.format({
+                async = false,
+                timeout_ms = 5000,
+              })
+            end,
+            desc = "Format selection"
+          },
         },
       },
     },
@@ -304,13 +433,5 @@ return {
     opts = {},
   },
 
-  -- Guias de indentação visuais
-  {
-    "lukas-reineke/indent-blankline.nvim",
-    main = "ibl",
-    opts = {
-      indent = { char = "│" },
-      scope = { enabled = true },
-    },
-  },
 }
+

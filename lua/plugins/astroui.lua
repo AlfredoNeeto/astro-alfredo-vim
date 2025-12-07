@@ -13,10 +13,15 @@ return {
     -- AstroUI allows you to easily modify highlight groups easily for any and all colorschemes
     highlights = {
       init = { -- this table overrides highlights in all themes
-        -- Normal = { bg = "#000000" },
-      },
-      astrodark = { -- a table of overrides/changes when applying the astrotheme theme
-        -- Normal = { bg = "#000000" },
+        -- Melhorar contraste e suavidade da UI
+        CursorLine = { bg = "#1c2128" },
+        StatusLine = { bg = "#161b22", fg = "#c9d1d9" },
+        TabLine = { bg = "#0d1117" },
+        TabLineFill = { bg = "#0d1117" },
+        WinSeparator = { fg = "#30363d" },
+        -- Popup e floating windows mais bonitos
+        NormalFloat = { bg = "#161b22" },
+        FloatBorder = { fg = "#58a6ff", bg = "#161b22" },
       },
     },
     -- Icons can be configured throughout the interface

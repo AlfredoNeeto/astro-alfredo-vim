@@ -31,7 +31,11 @@ return {
         -- disable lua_ls formatting capability if you want to use StyLua to format your lua code
         -- "lua_ls",
       },
-      timeout_ms = 1000, -- default format timeout
+      timeout_ms = 10000, -- aumentar timeout para 10 segundos
+      filter = function(client)
+        -- Garantir que a formatação seja aplicada corretamente
+        return client.supports_method("textDocument/formatting")
+      end,
       -- filter = function(client) -- fully override the default formatting function
       --   return true
       -- end
