@@ -292,15 +292,19 @@ return {
   },
   ]]--
 
-  -- Terminal flutuante
+  -- Terminal flutuante com SSH integrado
   {
     "akinsho/toggleterm.nvim",
     version = "*",
+    lazy = false,
+    priority = 100,
     keys = {
       { "<A-t>", "<cmd>ToggleTerm<cr>", desc = "Toggle floating terminal" },
+      { "<leader>sh", desc = "SSH: Selecionar host" },
     },
     config = function()
-      require("toggleterm").setup({
+      local toggleterm = require("toggleterm")
+      toggleterm.setup({
         size = function(term)
           if term.direction == "float" then
             return { height = 30, width = 120 }
@@ -311,9 +315,162 @@ return {
           border = "curved",
         },
       })
-      
+
+      local Terminal = require("toggleterm.terminal").Terminal
+      local ssh_terminals = {}
+
       -- Comando para sair do terminal facilmente
       vim.keymap.set("t", "<A-t>", "<C-\\><C-n><cmd>ToggleTerm<cr>", { noremap = true, silent = true })
+
+      local function read_ssh_config()
+        local hosts = {}
+        local function consume_file(path)
+          if vim.fn.filereadable(path) == 0 then
+            return
+          end
+          for _, line in ipairs(vim.fn.readfile(path)) do
+            local host_line = line:match("^%s*[Hh]ost%s+(.+)")
+            if host_line then
+              for token in host_line:gmatch("%S+") do
+                if not token:find("%*") then
+                  hosts[token] = token
+                end
+              end
+            end
+          end
+        end
+
+        consume_file(vim.fn.expand("~/.ssh/config"))
+
+        local config_dir = vim.fn.expand("~/.ssh/config.d")
+        if vim.fn.isdirectory(config_dir) == 1 then
+          local files = vim.fn.globpath(config_dir, "*", false, true)
+          for _, file in ipairs(files) do
+            consume_file(file)
+          end
+        end
+
+        return hosts
+      end
+
+      local function manual_hosts()
+        local map = {}
+        local manual = vim.g.neovim_ssh_hosts or vim.g.ssh_hosts
+        if type(manual) ~= "table" then
+          return map
+        end
+        for alias, value in pairs(manual) do
+          local key = alias
+          local target = value
+          if type(alias) == "number" then
+            key = tostring(value)
+            target = value
+          end
+          if type(target) == "string" then
+            map[tostring(key)] = target
+          end
+        end
+        return map
+      end
+
+      local function collect_hosts()
+        local hosts = manual_hosts()
+        for alias, target in pairs(read_ssh_config()) do
+          if hosts[alias] == nil then
+            hosts[alias] = target
+          end
+        end
+        return hosts
+      end
+
+      local function sorted_hosts()
+        local items = {}
+        for alias, target in pairs(collect_hosts()) do
+          table.insert(items, { alias = alias, target = target })
+        end
+        table.sort(items, function(a, b)
+          return a.alias < b.alias
+        end)
+        return items
+      end
+
+      local function open_ssh(target, alias)
+        if not target or target == "" then
+          vim.notify("Host SSH inválido", vim.log.levels.WARN)
+          return
+        end
+
+        alias = alias or target
+        local key = alias .. "::" .. target
+        if not ssh_terminals[key] then
+          local cmd = target
+          if not cmd:match("^%s*ssh%s") then
+            cmd = "ssh " .. cmd
+          end
+          ssh_terminals[key] = Terminal:new({
+            cmd = cmd,
+            direction = "float",
+            close_on_exit = false,
+            hidden = true,
+            on_open = function(term)
+              vim.cmd.startinsert()
+              pcall(vim.api.nvim_buf_set_name, term.bufnr, ("ssh://%s"):format(alias))
+            end,
+          })
+        end
+
+        ssh_terminals[key]:toggle()
+      end
+
+      local function interactive_ssh()
+        local hosts = sorted_hosts()
+        if vim.tbl_isempty(hosts) then
+          vim.ui.input({ prompt = "Host SSH (ex: usuario@servidor)", completion = "file" }, function(input)
+            if input and input ~= "" then
+              open_ssh(vim.trim(input), vim.trim(input))
+            end
+          end)
+          return
+        end
+
+        vim.ui.select(hosts, {
+          prompt = "Conectar via SSH",
+          format_item = function(item)
+            if item.alias == item.target then
+              return item.alias
+            end
+            return string.format("%s (%s)", item.alias, item.target)
+          end,
+        }, function(choice)
+          if not choice then
+            return
+          end
+          open_ssh(choice.target, choice.alias)
+        end)
+      end
+
+      vim.api.nvim_create_user_command("SSH", function(opts)
+        local arg = vim.trim(opts.args or "")
+        if arg ~= "" then
+          local hosts = collect_hosts()
+          local target = hosts[arg] or arg
+          open_ssh(target, arg)
+        else
+          interactive_ssh()
+        end
+      end, {
+        desc = "Abrir conexão SSH em terminal flutuante",
+        nargs = "?",
+        complete = function()
+          local names = {}
+          for _, item in ipairs(sorted_hosts()) do
+            table.insert(names, item.alias)
+          end
+          return names
+        end,
+      })
+
+      vim.keymap.set("n", "<leader>sh", interactive_ssh, { desc = "Selecionar host SSH", silent = true })
     end,
   },
 
@@ -423,24 +580,39 @@ IMPORTANTE: A formatação correta do código é essencial para syntax highlight
 
       -- Register markdown parser for copilot-chat filetype (fallback)
       pcall(vim.treesitter.language.register, "markdown", "copilot-chat")
-      
-      vim.g.markdown_fenced_languages = {
-        "c", "cpp", "csharp=cpp", "python", "javascript", "typescript", "lua", "bash",
-        "json", "yaml", "html", "css", "scss", "rust", "go", "java",
-        "ruby", "php", "swift", "kotlin", "r", "vim", "sql", "toml",
-        "xml", "dockerfile", "vue", "haskell", "perl", "scala",
+
+      -- Limpar configurações antigas de fenced languages para evitar erros de syntax
+      vim.g.markdown_fenced_languages = nil
+
+      -- Aliases extras para o Treesitter reconhecer nomes customizados em blocos markdown
+      local fenced_aliases = {
+        csharp = "c_sharp",
+        cs = "c_sharp",
+        javascriptreact = "tsx",
+        typescriptreact = "tsx",
       }
+      for alias, parser in pairs(fenced_aliases) do
+        pcall(vim.treesitter.language.register, parser, alias)
+      end
 
       vim.api.nvim_create_autocmd("FileType", {
         pattern = "copilot-chat",
         callback = function(event)
           -- Force markdown filetype to ensure all standard markdown tooling (syntax, treesitter) works
+          local buf = event.buf
           vim.schedule(function()
-            vim.api.nvim_buf_set_option(event.buf, "filetype", "markdown")
-            vim.opt_local.relativenumber = false
-            vim.opt_local.number = false
-            vim.opt_local.conceallevel = 2
-            vim.opt_local.concealcursor = ""
+            if not vim.api.nvim_buf_is_valid(buf) then
+              return
+            end
+
+            vim.api.nvim_buf_set_option(buf, "filetype", "markdown")
+
+            vim.api.nvim_buf_call(buf, function()
+              vim.opt_local.relativenumber = false
+              vim.opt_local.number = false
+              vim.opt_local.conceallevel = 2
+              vim.opt_local.concealcursor = ""
+            end)
           end)
         end,
       })

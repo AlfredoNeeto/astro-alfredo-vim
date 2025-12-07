@@ -106,6 +106,11 @@ Dentro do Neovim, execute:
 - Use nomes nativos do Treesitter (`csharp`, `cpp`, `python`, `javascript`, `html`, etc.).
 - Evite formatos como `[csharp] block` – eles são convertidos automaticamente, mas o ideal é já pedir nesse formato.
 
+### SSH
+- `<leader>sh` - Abrir seletor interativo de hosts (usa ToggleTerm)
+- `:SSH` - Abrir seletor interativo via comando
+- `:SSH alias` - Conectar imediatamente ao host configurado ou nome presente no `~/.ssh/config`
+
 ### Navegação
 - `Space+e` - Toggle explorador de arquivos
 - `Space+o` - Toggle outline (símbolos)
@@ -131,6 +136,24 @@ i           " Modo inserção
 Esc         " Modo normal
 v           " Modo visual
 ```
+
+## 🔐 SSH Rápido
+
+- `:SSH` abre um terminal flutuante já conectado ao host escolhido.
+- Os hosts são lidos automaticamente do `~/.ssh/config` (incluindo arquivos em `config.d`).
+- Você também pode cadastrar aliases estáticos adicionando ao seu `lua/polish.lua` (remova a primeira linha `return`):
+
+```lua
+vim.g.neovim_ssh_hosts = {
+	prod = "ubuntu@prod.example.com",
+	lab = "dev@10.0.0.42 -p 2202",
+}
+```
+
+- Comandos úteis:
+	- `:SSH alias` conecta diretamente.
+	- `<leader>sh` abre o seletor interativo (usa `vim.ui.select`).
+	- Se nenhum host for encontrado, o plugin solicita o endereço manualmente.
 
 ## 🛠️ Requisitos para .NET
 
