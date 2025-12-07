@@ -370,24 +370,81 @@ return {
       debug = false,
       model = 'claude-haiku-4.5',
       window = {
-        layout = 'vertical',
-        width = 0.4,
+        layout = 'float',
+        relative = 'editor',
+        width = 0.8,
+        height = 0.8,
+        border = 'rounded',
+        title = '   Copilot Chat ',
+        title_pos = 'center',
+        footer = ' C-l: Aceitar | M-]: Próx | M-[: Ant | Esc: Fechar ',
       },
+      headers = {
+        user = ' Você',
+        assistant = ' Copilot',
+        tool = ' Ferramenta',
+      },
+      separator = '────────────────────────',
+      auto_insert_mode = true,
       show_help = false,
       show_system_prompt = false,
       -- Prompt padrão para todas as conversas
       system_prompt = [[
-Você é um assistente de programação ajudando um desenvolvedor brasileiro.
-Regras importantes:
-- Sempre responda em português do Brasil.
-- Seja objetivo e direto, sem texto desnecessário.
-- Sempre que fizer sentido, mostre exemplos de código.
-- Nunca traduza código, nomes de classes, métodos, variáveis ou APIs.
-- Explique em português, mas deixe o código exatamente como estaria em um projeto real em inglês.
-- Quando listar passos, seja curto (no máximo 3–5 itens).
-- Se a pergunta estiver confusa, peça esclarecimento de forma simples.
+Você é um assistente de programação experiente ajudando um desenvolvedor brasileiro.
+
+REGRAS DE FORMATAÇÃO DE CÓDIGO (CRÍTICO):
+- SEMPRE use blocos de código cercados com três crases (```)
+- SEMPRE especifique a linguagem após as três crases de abertura
+- Use os nomes exatos: csharp, cpp, python, javascript, typescript, html, css, bash, json, yaml, rust, go, java, ruby, php, lua, sql, etc.
+- Para C#, use: ```csharp
+- Para C++, use: ```cpp
+- NUNCA use formato "[linguagem] block" - isso NÃO funciona
+- Sempre feche o bloco com três crases em linha separada
+
+FORMATO CORRETO:
+```csharp
+using System;
+class Program { }
+```
+
+REGRAS DE CONTEÚDO:
+- Responda sempre em português do Brasil
+- Seja objetivo e direto
+- Mantenha código em inglês (nomes de variáveis, classes, métodos)
+- Explique em português, mas preserve APIs e termos técnicos em inglês
+- Liste no máximo 3-5 passos quando necessário
+- Peça esclarecimento se a pergunta for confusa
+
+IMPORTANTE: A formatação correta do código é essencial para syntax highlighting funcionar.
 ]],
     },
+    config = function(_, opts)
+      require("CopilotChat").setup(opts)
+
+      -- Register markdown parser for copilot-chat filetype (fallback)
+      pcall(vim.treesitter.language.register, "markdown", "copilot-chat")
+      
+      vim.g.markdown_fenced_languages = {
+        "c", "cpp", "csharp=cpp", "python", "javascript", "typescript", "lua", "bash",
+        "json", "yaml", "html", "css", "scss", "rust", "go", "java",
+        "ruby", "php", "swift", "kotlin", "r", "vim", "sql", "toml",
+        "xml", "dockerfile", "vue", "haskell", "perl", "scala",
+      }
+
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "copilot-chat",
+        callback = function(event)
+          -- Force markdown filetype to ensure all standard markdown tooling (syntax, treesitter) works
+          vim.schedule(function()
+            vim.api.nvim_buf_set_option(event.buf, "filetype", "markdown")
+            vim.opt_local.relativenumber = false
+            vim.opt_local.number = false
+            vim.opt_local.conceallevel = 2
+            vim.opt_local.concealcursor = ""
+          end)
+        end,
+      })
+    end,
     keys = function(_, keys)
       -- mantém qualquer mapeamento padrão do plugin
       local mappings = {
@@ -485,4 +542,5 @@ Regras importantes:
   },
 
 }
+
 

@@ -172,6 +172,18 @@ return {
         -- Treesitter context e extras
         TreesitterContext = { bg = "#2a2d38" },
         TreesitterContextLineNumber = { fg = palette.keyword },
+
+        -- Copilot Chat Styles - Purple Theme (Texto Roxo)
+        CopilotChatHeader = { fg = "#a371f7", bold = true }, -- Apenas texto roxo para o cabeçalho
+        CopilotChatSeparator = { fg = "#3e3e42" }, -- Separador cinza escuro
+        CopilotChatPrompt = { fg = "#a371f7", bold = true }, -- Roxo claro para o prompt
+        CopilotChatModel = { fg = "#9cdcfe", italic = true }, -- Azul claro
+        CopilotChatResource = { fg = "#ce9178" }, -- Laranja
+        CopilotChatStatus = { fg = "#808080", italic = true }, -- Cinza sutil e itálico
+        CopilotChatTool = { fg = "#4ec9b0", bold = true }, -- Verde água
+        CopilotChatAnnotation = { fg = "#6a9955" }, -- Verde comentário
+        CopilotChatSpinner = { fg = "#a371f7" }, -- Spinner Roxo
+        CopilotChatCode = { fg = "#d4d4d4" }, -- Texto claro
       },
     },
     -- Icons can be configured throughout the interface
