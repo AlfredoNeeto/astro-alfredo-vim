@@ -5,10 +5,10 @@ Setup pessoal do Neovim usando **AstroNvim** para desenvolvimento **.NET** e **F
 ## ✨ Destaques
 
 - 🤖 **GitHub Copilot** com Claude Haiku 4.5
+- 💬 **Copilot Chat** com UI personalizada e formatação automática de blocos de código
 - 📱 **Flutter Tools** - Suporte completo para Dart/Flutter
 - 🔷 **OmniSharp** - IntelliSense para C#
-- 🎨 **GitHub Dark Theme**
-- 💬 **Terminal Flutuante** integrado
+- 🎨 **Visual Studio Insider Dark** com palette ajustada à mão
 - 🔍 **Telescope** - Busca rápida de arquivos
 
 ## 📦 Plugins Principais
@@ -28,7 +28,8 @@ Setup pessoal do Neovim usando **AstroNvim** para desenvolvimento **.NET** e **F
 - **Dart LSP** integrado
 
 ### Visual
-- **GitHub Theme** - Tema GitHub Dark
+- **Visual Studio Insider Dark** - Palette portada e refinada no `astroui`
+- **Copilot Chat UI** - Layout flutuante com cabeçalhos, separadores e syntax highlight garantido
 - **GitSigns** - Mostra mudanças Git inline
 - **Indent Blankline** - Guias de indentação
 
@@ -69,6 +70,9 @@ git pull origin main
 
 # Abrir Neovim e instalar plugins
 nvim
+
+# Atualizar parsers do Treesitter
+:TSUpdate
 ```
 
 ### 4. Instalar LSPs
@@ -96,6 +100,11 @@ Dentro do Neovim, execute:
 - `Space+c+t` - Gerar testes
 - `Space+c+f` - Corrigir código
 - `Space+c+o` - Otimizar código
+
+#### Formatação automática no Copilot Chat
+- O sistema força blocos cercados com ```linguagem```, garantindo syntax highlight.
+- Use nomes nativos do Treesitter (`csharp`, `cpp`, `python`, `javascript`, `html`, etc.).
+- Evite formatos como `[csharp] block` – eles são convertidos automaticamente, mas o ideal é já pedir nesse formato.
 
 ### Navegação
 - `Space+e` - Toggle explorador de arquivos
