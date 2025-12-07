@@ -20,6 +20,65 @@ return {
     }
   },
 
+  -- File explorer bonito com ícones (Neo-tree)
+  {
+    "nvim-neo-tree/neo-tree.nvim",
+    branch = "v3.x",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-tree/nvim-web-devicons",
+      "MunifTanjim/nui.nvim",
+    },
+    cmd = "Neotree",
+    keys = {
+      { "<leader>e", "<cmd>Neotree toggle<cr>", desc = "Toggle file explorer" },
+    },
+    opts = {
+      close_if_last_window = true,
+      window = { width = 30 },
+      filesystem = {
+        follow_current_file = { enabled = true },
+        filtered_items = {
+          hide_dotfiles = false,
+          hide_gitignored = false,
+        },
+      },
+      default_source = "filesystem",
+      sources = { "filesystem", "git_status", "buffers" },
+      source_selector = {
+        winbar = true,
+        statusline = false,
+        content_layout = "center",
+        sources = {
+          { source = "filesystem", display_name = "Files" },
+          { source = "git_status", display_name = "Git" },
+          { source = "buffers", display_name = "Buffers" },
+        },
+      },
+      event_handlers = {
+        {
+          event = "neo_tree_buffer_enter",
+          handler = function()
+            local map = vim.keymap.set
+            local opts = { buffer = true, noremap = true, silent = true }
+            -- Filesystem
+            map("n", "gf", function()
+              require("neo-tree.command").execute({ source = "filesystem" })
+            end, opts)
+            -- Git status
+            map("n", "gg", function()
+              require("neo-tree.command").execute({ source = "git_status" })
+            end, opts)
+            -- Buffers
+            map("n", "gb", function()
+              require("neo-tree.command").execute({ source = "buffers" })
+            end, opts)
+          end,
+        },
+      },
+    },
+  },
+
   -- Melhor busca e replace visual
   {
     "nvim-telescope/telescope.nvim",
@@ -137,6 +196,8 @@ return {
       },
       show_help = false,
       show_system_prompt = false,
+      -- Modo agente - permite que o Copilot execute ações autonomamente
+      agent = 'o200-1217',  -- Modelo com capacidades de agente
     },
     keys = {
       { "<leader>cc", "<cmd>CopilotChatToggle<cr>", desc = "Toggle Copilot Chat" },
@@ -145,6 +206,7 @@ return {
       { "<leader>cf", "<cmd>CopilotChatFix<cr>", desc = "Fix code" },
       { "<leader>co", "<cmd>CopilotChatOptimize<cr>", desc = "Optimize code" },
       { "<leader>cm", "<cmd>CopilotChatModels<cr>", desc = "Select Copilot Model" },
+      { "<leader>ca", "<cmd>CopilotChatAgents<cr>", desc = "Select Copilot Agent" },
       { "<leader>cr", "<cmd>CopilotChatReset<cr>", desc = "Reset Chat" },
       { "<leader>cs", "<cmd>CopilotChatStop<cr>", desc = "Stop Chat" },
     },
@@ -232,6 +294,23 @@ return {
           ["<C-s>"] = { "<esc><cmd>w<cr>", desc = "Save and exit insert" },
         },
       },
+    },
+  },
+
+  -- UI mais bonita para popups, seletores e inputs
+  {
+    "stevearc/dressing.nvim",
+    event = "VeryLazy",
+    opts = {},
+  },
+
+  -- Guias de indentação visuais
+  {
+    "lukas-reineke/indent-blankline.nvim",
+    main = "ibl",
+    opts = {
+      indent = { char = "│" },
+      scope = { enabled = true },
     },
   },
 }
