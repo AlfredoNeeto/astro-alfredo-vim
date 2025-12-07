@@ -4,7 +4,7 @@
 
 -- Configurar hosts SSH personalizados (opcional)
 vim.g.neovim_ssh_hosts = {
-  -- Exemplos:
-  -- prod = "usuario@servidor.com",
-  -- dev = "usuario@192.168.1.100 -p 2222",
+  -- Tente primeiro sem especificar chave (SSH busca automaticamente em ~/.ssh/)
+  dev = "dev",
+
 }

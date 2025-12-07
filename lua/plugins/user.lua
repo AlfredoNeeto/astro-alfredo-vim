@@ -307,13 +307,21 @@ return {
       toggleterm.setup({
         size = function(term)
           if term.direction == "float" then
-            return { height = 30, width = 120 }
+            return { height = 25, width = 100 }
           end
         end,
         direction = "float",
         float_opts = {
-          border = "curved",
+          border = "rounded",
+          winblend = 0,
         },
+        shade_terminals = false,
+        start_in_insert = true,
+        insert_mappings = true,
+        terminal_mappings = true,
+        persist_size = true,
+        persist_mode = true,
+        auto_scroll = true,
       })
 
       local Terminal = require("toggleterm.terminal").Terminal
@@ -412,9 +420,17 @@ return {
             direction = "float",
             close_on_exit = false,
             hidden = true,
+            float_opts = {
+              border = "rounded",
+              winblend = 0,
+            },
             on_open = function(term)
               vim.cmd.startinsert()
-              pcall(vim.api.nvim_buf_set_name, term.bufnr, ("ssh://%s"):format(alias))
+              pcall(vim.api.nvim_buf_set_name, term.bufnr, ("SSH: %s"):format(alias))
+              -- Mapear Esc para fechar o terminal SSH
+              vim.keymap.set("t", "<Esc>", function()
+                term:close()
+              end, { buffer = term.bufnr, noremap = true, silent = true })
             end,
           })
         end
@@ -434,12 +450,12 @@ return {
         end
 
         vim.ui.select(hosts, {
-          prompt = "Conectar via SSH",
+          prompt = "🌐 Conectar via SSH",
           format_item = function(item)
             if item.alias == item.target then
-              return item.alias
+              return string.format("  %s", item.alias)
             end
-            return string.format("%s (%s)", item.alias, item.target)
+            return string.format("  %s  →  %s", item.alias, item.target)
           end,
         }, function(choice)
           if not choice then
