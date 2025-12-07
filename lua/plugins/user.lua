@@ -183,6 +183,42 @@ return {
     },
   },
 
+  -- Emmet para HTML/CSS (autocompletar tags)
+  {
+    "olrtg/nvim-emmet",
+    config = function()
+      vim.keymap.set({ "n", "v" }, "<leader>xe", require("nvim-emmet").wrap_with_abbreviation, { desc = "Emmet wrap" })
+    end,
+  },
+
+  -- Autoclose e autorename de tags HTML
+  {
+    "windwp/nvim-ts-autotag",
+    event = "InsertEnter",
+    opts = {},
+  },
+
+  -- Highlight de cores CSS
+  {
+    "NvChad/nvim-colorizer.lua",
+    event = "BufReadPre",
+    opts = {
+      user_default_options = {
+        css = true,
+        css_fn = true,
+        tailwind = true,
+      },
+    },
+  },
+
+  -- Live Server para desenvolvimento web com hot-reload
+  {
+    "barrett-ruth/live-server.nvim",
+    build = "npm install -g live-server",
+    cmd = { "LiveServerStart", "LiveServerStop" },
+    config = true,
+  },
+
   -- Formatadores para diversos tipos de arquivo
   {
     "stevearc/conform.nvim",
@@ -407,6 +443,21 @@ Regras importantes:
             end,
             desc = "Format file"
           },
+          -- Abrir HTML no navegador
+          ["<leader>ho"] = {
+            function()
+              local file = vim.fn.expand("%:p")
+              if vim.bo.filetype == "html" then
+                vim.fn.jobstart({ "cmd.exe", "/c", "start", file }, { detach = true })
+              else
+                vim.notify("Não é um arquivo HTML", vim.log.levels.WARN)
+              end
+            end,
+            desc = "Open HTML in browser"
+          },
+          -- Live Server
+          ["<leader>hs"] = { "<cmd>LiveServerStart<cr>", desc = "Start Live Server" },
+          ["<leader>hq"] = { "<cmd>LiveServerStop<cr>", desc = "Stop Live Server" },
         },
         i = {
           ["<C-s>"] = { "<esc><cmd>w<cr>", desc = "Save and exit insert" },
